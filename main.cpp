@@ -1,5 +1,4 @@
 #include <QCoreApplication>
-#include <QDebug>
 #include <QStringList>
 #include <QString>
 #include "podcastclient.h"
@@ -72,38 +71,38 @@ int main(int argc, char *argv[])
   {
     if(args.count()<3)
     {
-      if(args.count()<3)
+      out << "Max. Connections: "<<client.getMaxDownloads() << endl;
+      return 0;
+    }
+    else
+    {
+      bool ok;
+      int number = args[2].toInt(&ok);
+      if(ok && number>0)
       {
-        out << "Max. Connections: "<<client.getMaxDownloads() << endl;
+        client.setMaxDownloads(number);
+        out << "Number of parallel downloads set to " << number << "." << endl;
         return 0;
       }
       else
       {
-        bool ok;
-        int number = args[2].toInt(&ok);
-        if(ok && number>0)
-        {
-          client.setMaxDownloads(number);
-          return 0;
-        }
-        else
-        {
-          out << "Invalid number given." << endl;
-        }
+        out << "Invalid number given." << endl;
+        return 1;
       }
     }
-    else if(args[1]=="--dest" || args[1]=="-d")
+  }
+  else if(args[1]=="--dest" || args[1]=="-d")
+  {
+    if(args.count()<3)
     {
-      if(args.count()<3)
-      {
-        out << "Download Destination: " << client.getDest() << endl;
-        return 0;
-      }
-      else
-      {
-        client.setDest(args[2]);
-        return 0;
-      }
+      out << "Download Destination: " << client.getDest() << endl;
+      return 0;
+    }
+    else
+    {
+      client.setDest(args[2]);
+      out << "Download Destionation set to: " << args[2] << endl;
+      return 0;
     }
   }
   else if(args[1] == "--help" || args[1] == "-h")

@@ -24,6 +24,7 @@ class Downloader : public QObject
   QSet<QNetworkReply*> replies;
   void continueQueue();
   void printProgress();
+  QUrl getUnredirectedUrl(QUrl url);
 public:
   explicit Downloader(QObject *parent = 0);
   void load(const QUrl& url);

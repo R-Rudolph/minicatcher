@@ -169,8 +169,6 @@ void Podcast::episodeDownloadFailed()
   episode->deleteLater();
   if(episodes.isEmpty())
   {
-    QSettings settings;
-    settings.setValue("KnownEpisodes/"+url.toString(QUrl::EncodeReserved),episodeTitlesKnown);
     emit done();
   }
 }

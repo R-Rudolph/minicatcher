@@ -22,7 +22,6 @@ void Downloader::continueQueue()
   else
   {
     emit queueEmpty();
-    out << endl;
   }
 }
 
@@ -30,7 +29,6 @@ void Downloader::printProgress()
 {
   if(replies.size()>0)
   {
-    int newLength = 0;
     foreach(QNetworkReply* reply,replies)
     {
       if(!reply->header(QNetworkRequest::ContentLengthHeader).isNull())
@@ -38,26 +36,34 @@ void Downloader::printProgress()
         int part = reply->bytesAvailable();
         int total = reply->header(QNetworkRequest::ContentLengthHeader).toInt();
         int percent = 100*((float)part)/total;
-        out << percent << "%|";
-        newLength += 2 + QString::number(percent).length();
+        QString percentString = QString::number(percent) + "% ";
+        out << percentString;
+        for(int i=0;i<5-percentString.length();i++)
+          out << " ";
+        out << getUnredirectedUrl(reply->url()).toString() << endl;
       }
       else
       {
         int part = reply->bytesAvailable();
-        out << part/1000000 << "MB|";
-        newLength += 3 + QString::number(part/1000000).length();
+        QString sizeString = QString::number(part/1000000) + "MB ";
+        out << sizeString;
+        for(int i=0;i<5-sizeString.length();i++)
+          out << " ";
+        out << getUnredirectedUrl(reply->url()).toString() << endl;
       }
     }
-    out << downloadQueue.size() << " queued";
-    newLength += 7 + QString::number(downloadQueue.size()).length();
-    if(newLength<lastLength)
-    {
-      out << QString(lastLength-newLength,' ');
-    }
-    lastLength = newLength;
+    out << downloadQueue.size() << " queued" << "\n\n";
     out.flush();
-    out << "\r";
   }
+}
+
+QUrl Downloader::getUnredirectedUrl(QUrl url)
+{
+  while(redirectMapping.contains(url))
+  {
+    url = redirectMapping[url];
+  }
+  return url;
 }
 
 Downloader::Downloader(QObject *parent) : QObject(parent)

@@ -144,13 +144,14 @@ void PodcastClient::list()
 {
   foreach(QString url, getFeedsFromSettings())
   {
-    qDebug() << url;
+    out << url << endl;
   }
 }
 
 void PodcastClient::setMaxDownloads(int num)
 {
   downloader.setMaxConnections(num);
+  settings.setValue("NumDownloads",num);
   settings.sync();
 }
 
