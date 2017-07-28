@@ -23,7 +23,7 @@ void Podcast::newEpisode(const QUrl &url, QString podcastTitle, const QString& e
     return;
   podcastTitle.replace(QRegExp("[\\/\\\\?%\\*:\\|<>]")," ");
   Episode* ep = new Episode(podcastTitle,episodeTitle,url,downloader,this);
-  episodes.insert(ep);
+  episodes.append(ep);
   connect(ep,&Episode::complete,this,&Podcast::episodeDownloadSuccess);
   connect(ep,&Episode::failed,this,&Podcast::episodeDownloadFailed);
 }
@@ -143,7 +143,7 @@ void Podcast::init(bool keepNewestEntry)
 
 void Podcast::update()
 {
-  downloader->load(url);
+  downloader->load(url,"Feed:"+getUrl().toString());
 }
 
 void Podcast::episodeDownloadSuccess()
@@ -151,7 +151,7 @@ void Podcast::episodeDownloadSuccess()
   Episode* episode = (Episode*) QObject::sender();
   episode->save(targetFolder);
   episodeTitlesKnown.push_back(episode->getEpisodeTitle());
-  episodes.remove(episode);
+  episodes.removeAll(episode);
   episode->deleteLater();
   if(episodes.isEmpty())
   {
@@ -165,7 +165,7 @@ void Podcast::episodeDownloadFailed()
 {
   Episode* episode = (Episode*) QObject::sender();
   out << "Could not download " << episode->getUrl().toString() << endl;
-  episodes.remove(episode);
+  episodes.removeAll(episode);
   episode->deleteLater();
   if(episodes.isEmpty())
   {
@@ -199,14 +199,9 @@ void Podcast::feedDownloadSuccess(const QUrl& url, const QByteArray& data)
     load();
   else if(mode==INIT_LAST)
   {
-    bool first = true;
+    episodes.removeFirst();
     foreach(Episode* ep, episodes)
     {
-      if(first)
-      {
-        first = false;
-        continue;
-      }
       episodeTitlesKnown.push_back(ep->getEpisodeTitle());
     }
     QSettings settings;
@@ -225,7 +220,7 @@ void Podcast::feedDownloadSuccess(const QUrl& url, const QByteArray& data)
   }
 }
 
-void Podcast::feedDownloadFailed(const QUrl& url, QNetworkReply::NetworkError error)
+void Podcast::feedDownloadFailed(const QUrl& url, QNetworkReply::NetworkError)
 {
   if(this->url!=url)
     return;

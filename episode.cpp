@@ -29,7 +29,7 @@ Episode::Episode(const QString& podcastName, const QString &episodeTitle, const 
 
 void Episode::load()
 {
-  downloader->load(url);
+  downloader->load(url,episodeTitle);
 }
 
 bool Episode::save(QDir directory)

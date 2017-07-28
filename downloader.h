@@ -10,24 +10,33 @@
 #include <QNetworkReply>
 #include "output.h"
 
+struct Download
+{
+  QUrl url;
+  QString description;
+  QNetworkReply* reply;
+  bool operator ==(const Download& other);
+};
+
 class Downloader : public QObject
 {
   Q_OBJECT
   int lastLength;
   QTimer timer;
-  QQueue<QUrl> downloadQueue;
+  QQueue<Download> downloadQueue;
   QNetworkAccessManager* manager;
   QMap<QNetworkReply*,QUrl> replyUrlMap;
   QMap<QUrl,QUrl> redirectMapping;
   int maxConnections;
   int numConnections;
-  QSet<QNetworkReply*> replies;
+  QList<Download> currentDownloads;
   void continueQueue();
   void printProgress();
   QUrl getUnredirectedUrl(QUrl url);
+  int getDownloadIndexByReply(QNetworkReply *reply);
 public:
   explicit Downloader(QObject *parent = 0);
-  void load(const QUrl& url);
+  void load(const QUrl& url, const QString& description);
   int getMaxConnections() const;
   void setMaxConnections(int value);
 signals:

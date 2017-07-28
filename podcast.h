@@ -32,7 +32,7 @@ class Podcast : public QObject
   QUrl url;
   QDir targetFolder;
   QStringList episodeTitlesKnown;
-  QSet<Episode*> episodes;
+  QList<Episode*> episodes;
 
   void newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle);
   void parseRssLevel(QXmlStreamReader& xml);

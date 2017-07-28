@@ -14,9 +14,10 @@ void Downloader::continueQueue()
 {
   if(!downloadQueue.isEmpty())
   {
-    while(replies.size()<maxConnections)
+    while(currentDownloads.size()<maxConnections)
     {
-      load(downloadQueue.dequeue());
+      Download dl = downloadQueue.dequeue();
+      load(dl.url,dl.description);
     }
   }
   else
@@ -27,29 +28,29 @@ void Downloader::continueQueue()
 
 void Downloader::printProgress()
 {
-  if(replies.size()>0)
+  if(currentDownloads.size()>0)
   {
-    foreach(QNetworkReply* reply,replies)
+    foreach(Download dl,currentDownloads)
     {
-      if(!reply->header(QNetworkRequest::ContentLengthHeader).isNull())
+      if(!dl.reply->header(QNetworkRequest::ContentLengthHeader).isNull())
       {
-        int part = reply->bytesAvailable();
-        int total = reply->header(QNetworkRequest::ContentLengthHeader).toInt();
+        int part = dl.reply->bytesAvailable();
+        int total = dl.reply->header(QNetworkRequest::ContentLengthHeader).toInt();
         int percent = 100*((float)part)/total;
         QString percentString = QString::number(percent) + "% ";
         out << percentString;
         for(int i=0;i<5-percentString.length();i++)
           out << " ";
-        out << getUnredirectedUrl(reply->url()).toString() << endl;
+        out << dl.description << endl;
       }
       else
       {
-        int part = reply->bytesAvailable();
+        int part = dl.reply->bytesAvailable();
         QString sizeString = QString::number(part/1000000) + "MB ";
         out << sizeString;
         for(int i=0;i<5-sizeString.length();i++)
           out << " ";
-        out << getUnredirectedUrl(reply->url()).toString() << endl;
+        out << dl.description << endl;
       }
     }
     out << downloadQueue.size() << " queued" << "\n\n";
@@ -66,6 +67,16 @@ QUrl Downloader::getUnredirectedUrl(QUrl url)
   return url;
 }
 
+int Downloader::getDownloadIndexByReply(QNetworkReply *reply)
+{
+  for(int i=0;i<currentDownloads.size();i++)
+  {
+    if(currentDownloads[i].reply==reply)
+      return i;
+  }
+  return -1;
+}
+
 Downloader::Downloader(QObject *parent) : QObject(parent)
 {
   lastLength = 0;
@@ -73,50 +84,63 @@ Downloader::Downloader(QObject *parent) : QObject(parent)
   timer.setInterval(1000);
   timer.setSingleShot(false);
   manager = new QNetworkAccessManager(this);
+  //manager->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
   connect(manager,&QNetworkAccessManager::finished,this,&Downloader::downloadFinished);
   maxConnections = 5;
   timer.start();
 }
 
-void Downloader::load(const QUrl &url)
+void Downloader::load(const QUrl &url, const QString& description)
 {
-  if(replies.size()>=maxConnections)
+  if(currentDownloads.size()>=maxConnections)
   {
-    downloadQueue.enqueue(url);
+    downloadQueue.enqueue(Download{url,description,nullptr});
     return;
   }
   QNetworkRequest request;
   request.setUrl(QUrl(url));
   QNetworkReply* reply = manager->get(request);
-  replies.insert(reply);
+  currentDownloads.append(Download{url,description,reply});
 }
 
 void Downloader::downloadFinished(QNetworkReply *reply)
 {
   QNetworkReply::NetworkError error = reply->error();
-  if(!reply->attribute(QNetworkRequest::RedirectionTargetAttribute).isNull())
+  int downloadIndex = getDownloadIndexByReply(reply);
+  if(downloadIndex>=0)
   {
-    QUrl newUrl = QUrl(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString());
-    redirectMapping.insert(newUrl,reply->url());
-    load(newUrl);
-  }
-  else
-  {
-    QUrl url = reply->url();
-    while(redirectMapping.contains(url))
+    Download& dl = currentDownloads[downloadIndex];
+    if(!reply->attribute(QNetworkRequest::RedirectionTargetAttribute).isNull())
     {
-      url = redirectMapping[url];
-    }
-    if(error == QNetworkReply::NoError)
-    {
-      emit downloadSuccess(url,reply->readAll());
+      QUrl newUrl = QUrl(reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString());
+      redirectMapping.insert(newUrl,reply->url());
+      load(newUrl,dl.description);
     }
     else
     {
-      emit downloadFailed(url,error);
+      QUrl url = reply->url();
+      while(redirectMapping.contains(url))
+      {
+        url = redirectMapping[url];
+      }
+      if(error == QNetworkReply::NoError)
+      {
+        emit downloadSuccess(url,reply->readAll());
+      }
+      else
+      {
+        emit downloadFailed(url,error);
+      }
     }
+    currentDownloads.removeAll(dl);
   }
-  replies.remove(reply);
   reply->deleteLater();
   continueQueue();
+}
+
+bool Download::operator ==(const Download &other)
+{
+  return (url == other.url) &&
+         (description == other.description) &&
+         (reply == other.reply);
 }

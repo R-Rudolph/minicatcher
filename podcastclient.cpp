@@ -120,19 +120,17 @@ void PodcastClient::removePodcast(const QUrl &url)
     settings.remove("feeds");
   else
     settings.setValue("feeds",feeds);
-  QCoreApplication::exit(0);
 }
 
 void PodcastClient::setDest(const QString &dest)
 {
   QDir dir(dest);
-  if(dir.exists())
+  settings.setValue("Dest",dest);
+  settings.sync();
+  if(!dir.exists())
   {
-    settings.setValue("Dest",dest);
-    settings.sync();
+    out << "Target directory does not exist." << endl;
   }
-  else
-    out << "Target folder does not exist." << endl;
 }
 
 QString PodcastClient::getDest()
