@@ -149,8 +149,14 @@ void Podcast::update()
 void Podcast::episodeDownloadSuccess()
 {
   Episode* episode = (Episode*) QObject::sender();
-  episode->save(targetFolder);
-  episodeTitlesKnown.push_back(episode->getEpisodeTitle());
+  if(episode->save(targetFolder))
+  {
+    episodeTitlesKnown.push_back(episode->getEpisodeTitle());
+  }
+  else
+  {
+    out << "Could not save " << episode->getUrl().toString() << " to file." << endl;
+  }
   episodes.removeAll(episode);
   episode->deleteLater();
   if(episodes.isEmpty())

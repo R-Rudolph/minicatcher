@@ -43,6 +43,10 @@ bool Episode::save(QDir directory)
   if(file.open(QIODevice::WriteOnly))
   {
     file.write(data);
+    if(!file.flush())
+    {
+      return false;
+    }
     file.close();
     return true;
   }
