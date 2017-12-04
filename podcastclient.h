@@ -34,6 +34,7 @@ signals:
 
 private slots:
   void podcastDone();
+  void podcastWritingFailed();
 };
 
 #endif // PODCASTCLIENT_H

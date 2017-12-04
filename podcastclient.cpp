@@ -32,6 +32,7 @@ PodcastClient::PodcastClient(QObject *parent) : QObject(parent)
     podcast->setTargetFolder(QDir(settings.value("Dest").toString()));
     podcasts.push_back(podcast);
     connect(podcast,&Podcast::done,this,&PodcastClient::podcastDone);
+    connect(podcast,&Podcast::writingFailed,this,&PodcastClient::podcastWritingFailed);
   }
 }
 
@@ -165,6 +166,15 @@ void PodcastClient::podcastDone()
   {
     settings.sync();
     QCoreApplication::exit(0);
+  }
+}
+
+void PodcastClient::podcastWritingFailed()
+{
+  out << "Aborting downloads..." << endl;
+  foreach(Podcast* podcast, podcasts)
+  {
+    podcast->abort();
   }
 }
 

@@ -16,6 +16,11 @@ void Episode::setEpisodeTitle(const QString &value)
   episodeTitle = value;
 }
 
+void Episode::abort()
+{
+  downloader->abort(url);
+}
+
 Episode::Episode(const QString& podcastName, const QString &episodeTitle, const QUrl& url, Downloader *downloader, QObject *parent) : QObject(parent)
 {
   this->episodeTitle = episodeTitle;
@@ -42,13 +47,16 @@ bool Episode::save(QDir directory)
   QFile file(directory.filePath(filename));
   if(file.open(QIODevice::WriteOnly))
   {
-    file.write(data);
-    if(!file.flush())
+    if( (file.write(data) != data.size()) || !file.flush())
     {
+      file.close();
       return false;
     }
-    file.close();
-    return true;
+    else
+    {
+      file.close();
+      return true;
+    }
   }
   return false;
 }

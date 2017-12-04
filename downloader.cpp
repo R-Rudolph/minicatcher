@@ -10,17 +10,29 @@ void Downloader::setMaxConnections(int value)
   maxConnections = value;
 }
 
-void Downloader::continueQueue()
+void Downloader::abort(const QUrl &url)
 {
-  if(!downloadQueue.isEmpty())
+  for(int i=0;i<downloadQueue.size();i++)
   {
-    while(currentDownloads.size()<maxConnections)
+    Download download = downloadQueue[i];
+    if(download.url==url)
     {
-      Download dl = downloadQueue.dequeue();
-      load(dl.url,dl.description);
+      download.reply->deleteLater();
+      downloadQueue.removeAt(i);
+      i--;
     }
   }
-  else
+}
+
+void Downloader::continueQueue()
+{
+  while(currentDownloads.size()<maxConnections && !downloadQueue.isEmpty())
+  {
+    Download dl = downloadQueue.first();
+    downloadQueue.removeAt(0);
+    load(dl.url,dl.description);
+  }
+  if(downloadQueue.isEmpty())
   {
     emit queueEmpty();
   }
@@ -94,13 +106,14 @@ void Downloader::load(const QUrl &url, const QString& description)
 {
   if(currentDownloads.size()>=maxConnections)
   {
-    downloadQueue.enqueue(Download{url,description,nullptr});
+    downloadQueue.append(Download{url,description,nullptr});
     return;
   }
   QNetworkRequest request;
   request.setUrl(QUrl(url));
   QNetworkReply* reply = manager->get(request);
   currentDownloads.append(Download{url,description,reply});
+
 }
 
 void Downloader::downloadFinished(QNetworkReply *reply)

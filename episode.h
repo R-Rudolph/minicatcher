@@ -29,6 +29,7 @@ public:
   QUrl getUrl() const;
   QString getEpisodeTitle() const;
   void setEpisodeTitle(const QString &value);
+  void abort();
 
 signals:
   void complete();

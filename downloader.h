@@ -23,7 +23,7 @@ class Downloader : public QObject
   Q_OBJECT
   int lastLength;
   QTimer timer;
-  QQueue<Download> downloadQueue;
+  QList<Download> downloadQueue;
   QNetworkAccessManager* manager;
   QMap<QNetworkReply*,QUrl> replyUrlMap;
   QMap<QUrl,QUrl> redirectMapping;
@@ -39,6 +39,7 @@ public:
   void load(const QUrl& url, const QString& description);
   int getMaxConnections() const;
   void setMaxConnections(int value);
+  void abort(const QUrl& url);
 signals:
   void downloadSuccess(const QUrl& url, const QByteArray& data);
   void downloadFailed(const QUrl& url, QNetworkReply::NetworkError error);

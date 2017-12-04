@@ -44,9 +44,11 @@ public:
   void init(bool keepNewestEntry);
   QUrl getUrl() const;
   void setUrl(const QUrl &value);
+  void abort();
 
 signals:
   void done();
+  void writingFailed();
 public slots:
   void update();
   void setTargetFolder(const QDir &value);

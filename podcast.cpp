@@ -17,6 +17,19 @@ void Podcast::setUrl(const QUrl &value)
   url = value;
 }
 
+void Podcast::abort()
+{
+  foreach(Episode* episode, episodes)
+  {
+    disconnect(episode,&Episode::complete,this,&Podcast::episodeDownloadSuccess);
+    disconnect(episode,&Episode::failed,this,&Podcast::episodeDownloadFailed);
+    episode->abort();
+    episode->deleteLater();
+  }
+  episodes.clear();
+  emit done();
+}
+
 void Podcast::newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle)
 {
   if(episodeTitlesKnown.contains(episodeTitle))
@@ -156,6 +169,7 @@ void Podcast::episodeDownloadSuccess()
   else
   {
     out << "Could not save " << episode->getUrl().toString() << " to file." << endl;
+    emit writingFailed();
   }
   episodes.removeAll(episode);
   episode->deleteLater();
