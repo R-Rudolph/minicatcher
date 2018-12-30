@@ -21,8 +21,19 @@ void Episode::abort()
   downloader->abort(url);
 }
 
-Episode::Episode(const QString& podcastName, const QString &episodeTitle, const QUrl& url, Downloader *downloader, QObject *parent) : QObject(parent)
+QString Episode::getId() const
 {
+    return id;
+}
+
+void Episode::setId(const QString &value)
+{
+    id = value;
+}
+
+Episode::Episode(const QString& podcastName, const QString &episodeTitle, const QUrl& url, const QString& id, Downloader *downloader, QObject *parent) : QObject(parent)
+{
+  this->id = id;
   this->episodeTitle = episodeTitle;
   this->downloader = downloader;
   this->url = url;

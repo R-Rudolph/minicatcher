@@ -10,10 +10,13 @@
 #include "podcast.h"
 #include "downloader.h"
 #include "output.h"
+#include "version.h"
 
 class PodcastClient : public QObject
 {
   Q_OBJECT
+  LibraryVersion version_;
+
   QSettings settings;
   Downloader downloader;
   QList<Podcast*> podcasts;

@@ -30,12 +30,20 @@ void Podcast::abort()
   emit done();
 }
 
-void Podcast::newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle)
+void Podcast::newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle, const QString& id)
 {
   if(episodeTitlesKnown.contains(episodeTitle))
+  {
+    episodeTitlesKnown.removeAll(episodeTitle);
+    episodeTitlesKnown.push_back(id);
     return;
+  }
+  else if(episodeTitlesKnown.contains(id))
+  {
+    return;
+  }
   podcastTitle.replace(QRegExp("[\\/\\\\?%\\*:\\|<>]")," ");
-  Episode* ep = new Episode(podcastTitle,episodeTitle,url,downloader,this);
+  Episode* ep = new Episode(podcastTitle,episodeTitle,url,id,downloader,this);
   episodes.append(ep);
   connect(ep,&Episode::complete,this,&Podcast::episodeDownloadSuccess);
   connect(ep,&Episode::failed,this,&Podcast::episodeDownloadFailed);
@@ -94,6 +102,7 @@ void Podcast::parseItemLevel(QXmlStreamReader &xml, const QString& podcastTitle)
 {
   QString url;
   QString title;
+  QString id;
   while(!xml.atEnd())
   {
     QXmlStreamReader::TokenType ttype = xml.readNext();
@@ -113,13 +122,24 @@ void Podcast::parseItemLevel(QXmlStreamReader &xml, const QString& podcastTitle)
           }
           xml.skipCurrentElement();
         }
+        else if(xml.name()=="guid")
+        {
+          id = xml.readElementText();
+        }
         else
           xml.skipCurrentElement();
         break;
       case QXmlStreamReader::EndElement:
         if(!url.isNull() && !title.isNull())
         {
-          newEpisode(url,podcastTitle,title);
+          if(id.isEmpty())
+          {
+            newEpisode(url,podcastTitle,title,url);
+          }
+          else
+          {
+            newEpisode(url,podcastTitle,title,id);
+          }
         }
         return;
       case QXmlStreamReader::Invalid:
@@ -222,7 +242,7 @@ void Podcast::feedDownloadSuccess(const QUrl& url, const QByteArray& data)
     episodes.removeFirst();
     foreach(Episode* ep, episodes)
     {
-      episodeTitlesKnown.push_back(ep->getEpisodeTitle());
+      episodeTitlesKnown.push_back(ep->getId());
     }
     QSettings settings;
     settings.setValue("KnownEpisodes/"+url.toString(QUrl::EncodeReserved),episodeTitlesKnown);
@@ -232,7 +252,7 @@ void Podcast::feedDownloadSuccess(const QUrl& url, const QByteArray& data)
   {
     foreach(Episode* ep, episodes)
     {
-      episodeTitlesKnown.push_back(ep->getEpisodeTitle());
+      episodeTitlesKnown.push_back(ep->getId());
     }
     QSettings settings;
     settings.setValue("KnownEpisodes/"+url.toString(QUrl::EncodeReserved),episodeTitlesKnown);

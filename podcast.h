@@ -34,7 +34,7 @@ class Podcast : public QObject
   QStringList episodeTitlesKnown;
   QList<Episode*> episodes;
 
-  void newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle);
+  void newEpisode(const QUrl &url, QString podcastTitle, const QString& episodeTitle, const QString& id);
   void parseRssLevel(QXmlStreamReader& xml);
   void parseChannelLevel(QXmlStreamReader& xml);
   void parseItemLevel(QXmlStreamReader &xml, const QString& podcastTitle);

@@ -14,6 +14,13 @@ QStringList PodcastClient::getFeedsFromSettings()
 
 PodcastClient::PodcastClient(QObject *parent) : QObject(parent)
 {
+  if(settings.value("version").isNull())
+    version_ = VERSION_0_1;
+  else
+  {
+    bool ok;
+    version_ = (LibraryVersion) settings.value("version").toInt(&ok);
+  }
   if(settings.value("NumDownloads").isNull())
     settings.setValue("NumDownloads",10);
   if(settings.value("Dest").isNull())

@@ -17,19 +17,23 @@ class Episode : public QObject
 {
   Q_OBJECT
   QUrl url;
+  QString id;
   QString podcastName;
   QString episodeTitle;
   QString filename;
   QByteArray data;
   Downloader* downloader;
 public:
-  explicit Episode(const QString& podcastName, const QString& episodeTitle, const QUrl& url, Downloader* downloader, QObject *parent = 0);
+  explicit Episode(const QString& podcastName, const QString& episodeTitle, const QUrl& url, const QString& id, Downloader* downloader, QObject *parent = 0);
   void load();
   bool save(QDir directory);
   QUrl getUrl() const;
   QString getEpisodeTitle() const;
   void setEpisodeTitle(const QString &value);
   void abort();
+
+  QString getId() const;
+  void setId(const QString &value);
 
 signals:
   void complete();

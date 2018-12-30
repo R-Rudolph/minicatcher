@@ -31,4 +31,5 @@ HEADERS += \
     episode.h \
     downloader.h \
     podcastclient.h \
-    output.h
+    output.h \
+    version.h
